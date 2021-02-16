@@ -16,7 +16,7 @@ public protocol Persistable: NSManagedObject, DomainConvertibleType {
     associatedtype Identifier: Hashable
 
     /// The identity of the entity associated with this instance.
-    var identifier: Self.Identifier? { get set }
+    var identifier: Self.Identifier { get set }
 
     /// The object name entity associated with this instance.
     static var entityNameObject: String { get }
