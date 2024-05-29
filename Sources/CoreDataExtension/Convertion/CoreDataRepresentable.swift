@@ -8,7 +8,7 @@
 
 import CoreData
 
-public protocol CoreDataRepresentable: AnyObject, Identifiable {
+public protocol CoreDataRepresentable: Identifiable {
     /// The representation of model on CoreData
     associatedtype CoreDataType: Persistable
 
