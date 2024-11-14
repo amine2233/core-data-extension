@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "core-data-extension",
-    platforms: [.iOS(.v13), .macOS(.v10_15), .watchOS(.v6), .tvOS(.v13), .visionOS(.v1)],
+    platforms: [.iOS(.v16), .macOS(.v12), .watchOS(.v8), .tvOS(.v16), .visionOS(.v1)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
