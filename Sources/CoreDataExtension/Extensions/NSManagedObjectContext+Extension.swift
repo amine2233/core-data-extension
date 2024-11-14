@@ -9,19 +9,17 @@
 import CoreData
 import Foundation
 
-public enum ManagedObjectContextError: Error {
+public enum ManagedObjectContextError: Error, Equatable {
     case createEntityClass(String)
     case invalidEntityClass(String)
+    case notFoundEnity(String)
 }
 
 public extension NSManagedObjectContext {
     func create<T: Persistable>() throws -> T {
-        guard
-            let entity =
-                NSEntityDescription
-                .insertNewObject(
-                    forEntityName: String(describing: T.self),
-                    into: self) as? T
+        guard let entity = NSEntityDescription .insertNewObject(
+            forEntityName: String(describing: T.self),
+            into: self) as? T
         else { throw ManagedObjectContextError.createEntityClass("Can't create an entity \(String(describing: T.self))") }
         return entity
     }
@@ -29,6 +27,13 @@ public extension NSManagedObjectContext {
     func syncDelete<C: CoreDataRepresentable, P>(entity: C) throws where C.CoreDataType == P {
         let request = Request<P>().filtered(P.primaryAttribute, equalTo: entity.id)
         try remove(request)
+    }
+    
+    func first<T: Persistable>(_ request: Request<T>) throws -> T {
+        guard let entity = first(request) else {
+            throw ManagedObjectContextError.notFoundEnity(T.entityName)
+        }
+        return entity
     }
 
     func first<P: Persistable>(_ request: Request<P>) -> P? {
@@ -40,8 +45,10 @@ public extension NSManagedObjectContext {
         }
     }
 
-    func sync<C: CoreDataRepresentable, P>(entity: C, update: @escaping (P) -> Void) throws -> P
-    where C.CoreDataType == P, C.ID == P.Identifier {
+    func sync<C: CoreDataRepresentable, P>(
+        entity: C,
+        update: @escaping (P) -> Void
+    ) throws -> P where C.CoreDataType == P, C.ID == P.Identifier {
         let request = Request<P>().filtered(P.primaryAttribute, identifier: entity.id)
         let entity = try first(request) ?? create()
         update(entity)

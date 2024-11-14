@@ -19,10 +19,12 @@ public protocol CoreDataRepresentable: Identifiable {
     func update(entity: CoreDataType)
 }
 
-extension CoreDataRepresentable {
+public extension CoreDataRepresentable {
     /// Synchronise the core data entity with remote entity
     /// - Parameter context: The CoreData Context
-    @discardableResult public func sync(in context: NSManagedObjectContext) throws -> CoreDataType? where ID == CoreDataType.Identifier {
+    @discardableResult func sync(
+        in context: NSManagedObjectContext
+    ) throws -> CoreDataType? where ID == CoreDataType.Identifier {
         try context.sync(entity: self, update: update)
     }
 
@@ -30,25 +32,46 @@ extension CoreDataRepresentable {
     /// - Parameters:
     ///   - context: The CoreData Context
     ///   - recursively: save data recursivly
-    public func save(in context: NSManagedObjectContext, recursively: Bool = false) throws {
+    func save(
+        in context: NSManagedObjectContext,
+        recursively: Bool = false
+    ) throws {
         try context.save(recursively: recursively)
     }
 
     /// Delete entity
     /// - Parameter context: The CoreData Context
-    public func delete(in context: NSManagedObjectContext) throws {
+    func delete(in context: NSManagedObjectContext) throws {
         try context.syncDelete(entity: self)
+    }
+    
+    /// Get entiry from CoreData
+    /// - Parameter context: The CoreData Context
+    func get(
+        in context: NSManagedObjectContext
+    ) throws -> CoreDataType where ID == CoreDataType.Identifier {
+        let request = Request<CoreDataType>().filtered(CoreDataType.primaryAttribute, identifier: self.id)
+        return try context.first(request)
+    }
+    
+    /// Create the core data entiry
+    /// - Parameter context: The CoreData Context
+    @discardableResult func create(
+        in context: NSManagedObjectContext
+    ) throws -> CoreDataType? where ID == CoreDataType.Identifier {
+        let data = try context.create() as CoreDataType
+        return try context.sync(entity: self, update: update)
     }
 }
 
-extension Array where Element: CoreDataRepresentable, Element.ID == Element.CoreDataType.Identifier {
-    public func syncs(in context: NSManagedObjectContext) throws -> [Element.CoreDataType] {
+public extension Collection where Element: CoreDataRepresentable, Element.ID == Element.CoreDataType.Identifier {
+    func syncs(in context: NSManagedObjectContext) throws -> [Element.CoreDataType] {
         let elements = try compactMap { try $0.sync(in: context) }
         try context.save()
         return elements
     }
 
-    public func deletes(in context: NSManagedObjectContext) throws {
+    func deletes(in context: NSManagedObjectContext) throws {
         try forEach { try $0.delete(in: context) }
         try context.save()
     }
